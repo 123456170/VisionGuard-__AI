@@ -1,0 +1,27 @@
+# ============================================================
+# VisionGuard AI — Industrial QC System
+# Python 3.10+ recommended
+# ============================================================
+
+# --- Core app / UI ---
+streamlit
+
+# --- Computer vision / detection ---
+ultralytics         # YOLOv11 support
+opencv-python-headless
+pillow
+
+# --- Deep learning (EfficientNet-B2 classifier) ---
+torch
+torchvision
+
+# --- Generative AI (defect explainer) ---
+google-generativeai
+
+# --- Data / dashboard / SPC ---
+numpy
+pandas
+plotly
+
+# --- Utilities ---
+pyyaml

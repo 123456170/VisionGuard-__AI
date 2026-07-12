@@ -39,29 +39,37 @@ from PIL import Image
 try:
     import cv2
     CV2_AVAILABLE = True
-except ImportError:
+    CV2_IMPORT_ERROR = None
+except Exception as e:
     CV2_AVAILABLE = False
+    CV2_IMPORT_ERROR = f"{type(e).__name__}: {e}"
 
 try:
     from ultralytics import YOLO
     YOLO_AVAILABLE = True
-except ImportError:
+    YOLO_IMPORT_ERROR = None
+except Exception as e:
     YOLO_AVAILABLE = False
+    YOLO_IMPORT_ERROR = f"{type(e).__name__}: {e}"
 
 try:
     import torch
     import torch.nn as nn
     from torchvision import models, transforms
     TORCH_AVAILABLE = True
-except ImportError:
+    TORCH_IMPORT_ERROR = None
+except Exception as e:
     TORCH_AVAILABLE = False
+    TORCH_IMPORT_ERROR = f"{type(e).__name__}: {e}"
 
 try:
     from google import genai as google_genai
     from google.genai import types as google_genai_types
     GEMINI_SDK_AVAILABLE = True
-except ImportError:
+    GEMINI_IMPORT_ERROR = None
+except Exception as e:
     GEMINI_SDK_AVAILABLE = False
+    GEMINI_IMPORT_ERROR = f"{type(e).__name__}: {e}"
 
 
 # ====================================================================
@@ -577,6 +585,19 @@ def sidebar_controls():
     pill(GEMINI_SDK_AVAILABLE, "Gemini SDK")
     pill(bool(gemini_key) and enable_gemini, "Gemini Active")
 
+    errors = {
+        "OpenCV": CV2_IMPORT_ERROR,
+        "Ultralytics": YOLO_IMPORT_ERROR,
+        "PyTorch": TORCH_IMPORT_ERROR,
+        "Gemini SDK": GEMINI_IMPORT_ERROR,
+    }
+    active_errors = {k: v for k, v in errors.items() if v}
+    if active_errors:
+        with st.sidebar.expander("⚠️ Import error details"):
+            for name, err in active_errors.items():
+                st.markdown(f"**{name}:**")
+                st.code(err, language="text")
+
     st.sidebar.markdown("---")
     if st.sidebar.button("🗑️ Clear defect database"):
         clear_database()
@@ -643,8 +664,14 @@ def tab_live_detection(cfg):
     st.markdown("#### 🎥 Camera Input")
 
     if not CV2_AVAILABLE:
-        st.error("OpenCV is not installed — camera/video processing is unavailable. "
-                 "Install it with `pip install opencv-python-headless`.")
+        st.error("OpenCV is not available — camera/video processing is disabled.")
+        st.code(CV2_IMPORT_ERROR or "Unknown import error", language="text")
+        st.caption(
+            "If this says `ImportError: libGL.so.1` (or similar), the package installed "
+            "but a system library is missing — add a `packages.txt` file with `libgl1` and "
+            "`libglib2.0-0` and reboot. If it says `ModuleNotFoundError`, the package never "
+            "installed — check that `opencv-python-headless` is in `requirements.txt`."
+        )
         return
 
     yolo_model = load_yolo_model(cfg["yolo_weights_path"]) if YOLO_AVAILABLE else None

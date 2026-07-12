@@ -57,7 +57,8 @@ except ImportError:
     TORCH_AVAILABLE = False
 
 try:
-    import google.generativeai as genai
+    from google import genai as google_genai
+    from google.genai import types as google_genai_types
     GEMINI_SDK_AVAILABLE = True
 except ImportError:
     GEMINI_SDK_AVAILABLE = False
@@ -455,12 +456,11 @@ def get_gemini_explanation(pil_image: Image.Image, defect_type: str, confidence:
         return ("No Gemini API key provided.",
                 "Add a key in the sidebar to enable AI root-cause analysis.")
     if not GEMINI_SDK_AVAILABLE:
-        return ("google-generativeai package not installed.",
-                "Run: pip install google-generativeai")
+        return ("google-genai package not installed.",
+                "Run: pip install google-genai")
 
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
+        client = google_genai.Client(api_key=api_key)
         prompt = (
             f"You are a senior manufacturing quality engineer. An automated vision "
             f"system flagged a '{defect_type}' defect (classifier confidence "
@@ -469,7 +469,10 @@ def get_gemini_explanation(pil_image: Image.Image, defect_type: str, confidence:
             "ROOT_CAUSE: <one or two sentences on the most probable process root cause>\n"
             "CORRECTIVE_ACTION: <one or two sentences of a concrete corrective/preventive action>"
         )
-        response = model.generate_content([prompt, pil_image])
+        response = client.models.generate_content(
+            model=model_name,
+            contents=[prompt, pil_image],
+        )
         text = response.text.strip()
 
         root_cause, corrective_action = "Unable to parse response.", text

@@ -17,6 +17,7 @@ torchvision
 
 # --- Generative AI (defect explainer) ---
 google-genai
+protobuf
 
 # --- Data / dashboard / SPC ---
 numpy
